@@ -5,16 +5,16 @@
 #include "platform.h"
 #include "fs/fs.h"
 
-u8* gOverrideEeprom = NULL;
+u8 *gOverrideEeprom = NULL;
 
 extern OSMgrArgs piMgrArgs;
 
 u64 osClockRate = 62500000;
 
-s32 osPiStartDma(UNUSED OSIoMesg *mb, UNUSED s32 priority, UNUSED s32 direction,
-                 uintptr_t devAddr, void *vAddr, size_t nbytes,
-                 UNUSED OSMesgQueue *mq) {
-    if (!vAddr || !devAddr) { return 0; }
+s32 osPiStartDma(UNUSED OSIoMesg *mb, UNUSED s32 priority, UNUSED s32 direction, uintptr_t devAddr, void *vAddr, size_t nbytes, UNUSED OSMesgQueue *mq) {
+    if (!vAddr || !devAddr) {
+        return 0;
+    }
     memcpy(vAddr, (const void *) devAddr, nbytes);
     return 0;
 }
@@ -152,7 +152,7 @@ s32 osEepromLongWrite(UNUSED OSMesgQueue *mq, u8 address, u8 *buffer, int nbytes
         return 0;
     }
 
-    u8 content[512] = { 0 };
+    u8 content[512] = {0};
     if (address != 0 || nbytes != 512) {
         osEepromLongRead(mq, 0, content, 512);
     }

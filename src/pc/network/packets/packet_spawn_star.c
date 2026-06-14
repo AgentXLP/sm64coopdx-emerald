@@ -6,10 +6,10 @@
 #include "pc/lua/smlua_hooks.h"
 #include "pc/debuglog.h"
 
-extern struct Object* gCurrentObject;
+extern struct Object *gCurrentObject;
 
-void network_send_spawn_star(struct Object* o, u8 starType, f32 x, f32 y, f32 z, u32 behParams, u8 networkPlayerIndex) {
-    struct Packet p = { 0 };
+void network_send_spawn_star(struct Object *o, u8 starType, f32 x, f32 y, f32 z, u32 behParams, u8 networkPlayerIndex) {
+    struct Packet p = {0};
     packet_init(&p, PACKET_SPAWN_STAR, true, PLMT_AREA);
     packet_write(&p, &starType, sizeof(u8));
     packet_write(&p, &x, sizeof(f32));
@@ -24,7 +24,7 @@ void network_send_spawn_star(struct Object* o, u8 starType, f32 x, f32 y, f32 z,
     network_send(&p);
 }
 
-void network_receive_spawn_star(struct Packet* p) {
+void network_receive_spawn_star(struct Packet *p) {
     u8 starType;
     f32 x, y, z;
     u32 behParams;
@@ -37,17 +37,24 @@ void network_receive_spawn_star(struct Packet* p) {
     packet_read(p, &behParams, sizeof(u32));
     packet_read(p, &networkPlayerIndex, sizeof(u8));
 
-    struct Object* oldObject = gCurrentObject;
-    struct Object* o = NULL;
+    struct Object *oldObject = gCurrentObject;
+    struct Object *o = NULL;
     gCurrentObject = gMarioStates[0].marioObj;
     if (gCurrentObject) {
         u32 oldBehParams = gCurrentObject->oBehParams;
         gCurrentObject->oBehParams = behParams;
         switch (starType) {
-            case 0: o = spawn_default_star(x, y, z); break;
-            case 1: o = spawn_red_coin_cutscene_star(x, y, z); break;
-            case 2: o = spawn_no_exit_star(x, y, z); break;
-            default: LOG_ERROR("UNKNOWN SPAWN STAR %d", starType);
+        case 0:
+            o = spawn_default_star(x, y, z);
+            break;
+        case 1:
+            o = spawn_red_coin_cutscene_star(x, y, z);
+            break;
+        case 2:
+            o = spawn_no_exit_star(x, y, z);
+            break;
+        default:
+            LOG_ERROR("UNKNOWN SPAWN STAR %d", starType);
         }
         gCurrentObject->oBehParams = oldBehParams;
     }
@@ -63,7 +70,7 @@ void network_receive_spawn_star(struct Packet* p) {
         // This check is vital for objects which are network owned specfically.
         // Leaving this the only way to properly set the cutscene flags
         // for those who don't own the object.
-        //printf("network_receive_spawn_star: Network Player Index is %i, Our Global Index is %i.\n", networkPlayerIndex, gNetworkPlayers[0].globalIndex);
+        // printf("network_receive_spawn_star: Network Player Index is %i, Our Global Index is %i.\n", networkPlayerIndex, gNetworkPlayers[0].globalIndex);
         if (networkPlayerIndex == gNetworkPlayers[0].globalIndex) {
             o->oStarSpawnExtCutsceneFlags = 1;
         } else {
@@ -72,15 +79,19 @@ void network_receive_spawn_star(struct Packet* p) {
     }
 }
 
-void network_send_spawn_star_nle(struct Object* o, u32 params) {
-    if (!o) { return; }
+void network_send_spawn_star_nle(struct Object *o, u32 params) {
+    if (!o) {
+        return;
+    }
     u8 globalIndex = UNKNOWN_GLOBAL_INDEX;
     if (o->behavior == bhvMario) {
         u8 localIndex = o->oBehParams - 1;
-        if (localIndex < MAX_PLAYERS) { globalIndex = gNetworkPlayers[localIndex].globalIndex; }
+        if (localIndex < MAX_PLAYERS) {
+            globalIndex = gNetworkPlayers[localIndex].globalIndex;
+        }
     }
 
-    struct Packet p = { 0 };
+    struct Packet p = {0};
     packet_init(&p, PACKET_SPAWN_STAR_NLE, true, PLMT_AREA);
     packet_write(&p, &globalIndex, sizeof(u8));
     packet_write(&p, &o->oSyncID, sizeof(u32));
@@ -89,7 +100,7 @@ void network_send_spawn_star_nle(struct Object* o, u32 params) {
     network_send(&p);
 }
 
-void network_receive_spawn_star_nle(struct Packet* p) {
+void network_receive_spawn_star_nle(struct Packet *p) {
     u8 globalIndex = UNKNOWN_GLOBAL_INDEX;
     u32 syncId = 0;
     u32 params = 0;
@@ -99,16 +110,16 @@ void network_receive_spawn_star_nle(struct Packet* p) {
     packet_read(p, &params, sizeof(u32));
 
     // grab network player first
-    struct Object* object = NULL;
+    struct Object *object = NULL;
     if (globalIndex != UNKNOWN_GLOBAL_INDEX) {
-        struct NetworkPlayer* np = network_player_from_global_index(globalIndex);
+        struct NetworkPlayer *np = network_player_from_global_index(globalIndex);
         if (np != NULL) {
             object = gMarioStates[np->localIndex].marioObj;
         }
     }
 
     // check for sync id
-    struct SyncObject* so = sync_object_get(syncId);
+    struct SyncObject *so = sync_object_get(syncId);
     if (object == NULL && so) {
         object = so->o;
     }

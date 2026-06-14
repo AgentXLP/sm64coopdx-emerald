@@ -6,7 +6,7 @@
 #include "pc/debuglog.h"
 
 void network_send_lua_custom(bool broadcast) {
-    lua_State* L = gLuaState;
+    lua_State *L = gLuaState;
     u16 zero = 0;
     s32 paramIndex = 1;
 
@@ -44,10 +44,10 @@ void network_send_lua_custom(bool broadcast) {
     }
 
     // write packet header
-    struct Packet p = { 0 };
+    struct Packet p = {0};
     packet_init(&p, PACKET_LUA_CUSTOM, reliability, PLMT_NONE);
     packet_write(&p, &modIndex, sizeof(u16));
-    u8* keyCount = &p.buffer[p.cursor];
+    u8 *keyCount = &p.buffer[p.cursor];
     packet_write(&p, &zero, sizeof(u8));
 
     // make sure value passed in is a table
@@ -59,7 +59,7 @@ void network_send_lua_custom(bool broadcast) {
 
     // iterate table
     s32 iterateIndex = lua_gettop(L);
-    lua_pushnil(L);  // first key
+    lua_pushnil(L); // first key
     while (lua_next(L, iterateIndex) != 0) {
         // convert and write key
         struct LSTNetworkType lntKey = smlua_to_lnt(L, -2);
@@ -95,10 +95,10 @@ void network_send_lua_custom(bool broadcast) {
     }
 }
 
-void network_receive_lua_custom(struct Packet* p) {
-    lua_State* L = gLuaState;
+void network_receive_lua_custom(struct Packet *p) {
+    lua_State *L = gLuaState;
     u16 modIndex = 0;
-    u8  keyCount = 0;
+    u8 keyCount = 0;
     packet_read(p, &modIndex, sizeof(u16));
     packet_read(p, &keyCount, sizeof(u8));
 
@@ -109,15 +109,15 @@ void network_receive_lua_custom(struct Packet* p) {
 
     lua_newtable(L);
     s32 tableIndex = lua_gettop(L);
-    for(u16 i = 0; i < keyCount; i++) {
-        struct LSTNetworkType lntKey = { 0 };
+    for (u16 i = 0; i < keyCount; i++) {
+        struct LSTNetworkType lntKey = {0};
         if (!packet_read_lnt(p, &lntKey)) {
             LOG_LUA_LINE("Failed to convert key to LNT (rx)");
             return;
         }
         smlua_push_lnt(&lntKey);
 
-        struct LSTNetworkType lntValue = { 0 };
+        struct LSTNetworkType lntValue = {0};
         if (!packet_read_lnt(p, &lntValue)) {
             LOG_LUA_LINE("Failed to convert value to LNT (rx)");
             return;
@@ -131,14 +131,14 @@ void network_receive_lua_custom(struct Packet* p) {
     lua_pop(L, 1); // pop table
 }
 
-  ////////////////
- // bytestring //
+////////////////
+// bytestring //
 ////////////////
 
 #define MAX_BYTESTRING_LENGTH (PACKET_LENGTH - 15)
 
 void network_send_lua_custom_bytestring(bool broadcast) {
-    lua_State* L = gLuaState;
+    lua_State *L = gLuaState;
     s32 paramIndex = 1;
 
     if (!L) {
@@ -175,7 +175,7 @@ void network_send_lua_custom_bytestring(bool broadcast) {
     }
 
     // write packet header
-    struct Packet p = { 0 };
+    struct Packet p = {0};
     packet_init(&p, PACKET_LUA_CUSTOM_BYTESTRING, reliability, PLMT_NONE);
     packet_write(&p, &modIndex, sizeof(u16));
 
@@ -188,11 +188,11 @@ void network_send_lua_custom_bytestring(bool broadcast) {
 
     // get string information
     size_t totalLength = 0;
-    const char* bytestring = lua_tolstring(L, bytestringIndex, &totalLength);
+    const char *bytestring = lua_tolstring(L, bytestringIndex, &totalLength);
 
     // check length
     if (totalLength <= 0 || totalLength > MAX_BYTESTRING_LENGTH) {
-        LOG_LUA_LINE("Tried to send a bytestring packet with an invalid length '%llu'. Must be above 0 and below '%u'", (u64)totalLength, MAX_BYTESTRING_LENGTH);
+        LOG_LUA_LINE("Tried to send a bytestring packet with an invalid length '%llu'. Must be above 0 and below '%u'", (u64) totalLength, MAX_BYTESTRING_LENGTH);
     }
 
     // write length
@@ -200,7 +200,7 @@ void network_send_lua_custom_bytestring(bool broadcast) {
     packet_write(&p, &bytestringLength, sizeof(u16));
 
     // write bytestring
-    packet_write(&p, (char*)bytestring, totalLength);
+    packet_write(&p, (char *) bytestring, totalLength);
 
     // send packet
     if (broadcast) {
@@ -210,8 +210,8 @@ void network_send_lua_custom_bytestring(bool broadcast) {
     }
 }
 
-void network_receive_lua_custom_bytestring(struct Packet* p) {
-    lua_State* L = gLuaState;
+void network_receive_lua_custom_bytestring(struct Packet *p) {
+    lua_State *L = gLuaState;
     u16 modIndex = 0;
     u16 bytestringLength = 0;
     packet_read(p, &modIndex, sizeof(u16));

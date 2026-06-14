@@ -5,40 +5,47 @@
 #include "apparition.inc.c"
 #include "utils/misc.h"
 
-#define ROM_ASSET_LOAD_DATA(bits) for (u##bits *data = asset->ptr; asset->cursor < asset->segmentedSize; data++) { *data = READ##bits(asset); }
+#define ROM_ASSET_LOAD_DATA(bits)                                                    \
+    for (u##bits *data = asset->ptr; asset->cursor < asset->segmentedSize; data++) { \
+        *data = READ##bits(asset);                                                   \
+    }
 
 struct RomAsset {
-    void* ptr;
+    void *ptr;
     enum RomAssetType assetType;
     u32 physicalAddress;
     u32 physicalSize;
     u32 segmentedAddress;
     u32 segmentedSize;
     u32 cursor;
-    struct RomAsset* next;
+    struct RomAsset *next;
 };
 
-static FILE* sRomFile = NULL;
-static struct RomAsset* sRomAssets = NULL;
+static FILE *sRomFile = NULL;
+static struct RomAsset *sRomAssets = NULL;
 
 static u32 sCurrentPhysicalAddress = 0;
 static u32 sCurrentPhysicalSize = 0;
-static u8* sCurrentSegmentMemory = NULL;
+static u8 *sCurrentSegmentMemory = NULL;
 static u32 sCurrentSegmentSize = 0;
 
-static s16 READ16(struct RomAsset* asset) {
+static s16 READ16(struct RomAsset *asset) {
     s64 index = (asset->segmentedAddress + asset->cursor);
-    if (index < 0 || index >= sCurrentSegmentSize) { return 0; }
-    u8* ptr = &sCurrentSegmentMemory[index];
-    s16 value = BSWAP16(*((s16*)ptr));
+    if (index < 0 || index >= sCurrentSegmentSize) {
+        return 0;
+    }
+    u8 *ptr = &sCurrentSegmentMemory[index];
+    s16 value = BSWAP16(*((s16 *) ptr));
     asset->cursor += sizeof(s16);
     return value;
 }
 
-static s8 READ8(struct RomAsset* asset) {
+static s8 READ8(struct RomAsset *asset) {
     s64 index = (asset->segmentedAddress + asset->cursor);
-    if (index < 0 || index >= sCurrentSegmentSize) { return 0; }
-    u8* ptr = &sCurrentSegmentMemory[index];
+    if (index < 0 || index >= sCurrentSegmentSize) {
+        return 0;
+    }
+    u8 *ptr = &sCurrentSegmentMemory[index];
     s8 value = *ptr;
     asset->cursor += sizeof(s8);
     return value;
@@ -67,7 +74,7 @@ static bool rom_asset_load_segment(u32 physicalAddress, u32 physicalSize) {
     fseek(sRomFile, physicalAddress, SEEK_SET);
     fread(sCurrentSegmentMemory, sizeof(u8), physicalSize, sRomFile);
 
-    u8* decompressed = rom_assets_decompress((u32*)sCurrentSegmentMemory, &sCurrentSegmentSize);
+    u8 *decompressed = rom_assets_decompress((u32 *) sCurrentSegmentMemory, &sCurrentSegmentSize);
     if (decompressed != NULL) {
         free(sCurrentSegmentMemory);
         sCurrentSegmentMemory = decompressed;
@@ -80,7 +87,7 @@ static bool rom_asset_load_segment(u32 physicalAddress, u32 physicalSize) {
 
 // Some Vtx arrays have been manually modified to use white opaque vertex colors
 // so they can be shaded by Lua and not stand out as being unlit
-static inline bool rom_asset_override_vertex_colors(void* ptr) {
+static inline bool rom_asset_override_vertex_colors(void *ptr) {
     extern Vtx hoot_seg5_vertex_05002E50[];
     extern Vtx hoot_seg5_vertex_05002F78[];
     extern Vtx hoot_seg5_vertex_050030A0[];
@@ -115,13 +122,13 @@ static inline bool rom_asset_override_vertex_colors(void* ptr) {
            ptr == dirt_seg3_vertex_0302BDC8;
 }
 
-static void rom_asset_load_vtx(struct RomAsset* asset) {
-    Vtx* vtx = asset->ptr;
+static void rom_asset_load_vtx(struct RomAsset *asset) {
+    Vtx *vtx = asset->ptr;
     while (asset->cursor < asset->segmentedSize) {
         vtx->v.ob[0] = READ16(asset);
         vtx->v.ob[1] = READ16(asset);
         vtx->v.ob[2] = READ16(asset);
-        vtx->v.flag  = READ16(asset);
+        vtx->v.flag = READ16(asset);
         vtx->v.tc[0] = READ16(asset);
         vtx->v.tc[1] = READ16(asset);
         if (rom_asset_override_vertex_colors(asset->ptr)) {
@@ -140,28 +147,50 @@ static void rom_asset_load_vtx(struct RomAsset* asset) {
     }
 }
 
-static void rom_asset_load(struct RomAsset* asset) {
+static void rom_asset_load(struct RomAsset *asset) {
     if (!rom_asset_load_segment(asset->physicalAddress, asset->physicalSize)) {
         return;
     }
     if (asset->physicalAddress == 0x00396340 && asset->assetType == ROM_ASSET_TEXTURE && clock_is_date(4, 1)) {
         switch (asset->segmentedAddress) {
-            case 0x00008000: memcpy(asset->ptr, apparition_texture_1, asset->segmentedSize); return;
-            case 0x00008800: memcpy(asset->ptr, apparition_texture_2, asset->segmentedSize); return;
-            case 0x00009000: memcpy(asset->ptr, apparition_texture_3, asset->segmentedSize); return;
-            case 0x00009800: memcpy(asset->ptr, apparition_texture_4, asset->segmentedSize); return;
+        case 0x00008000:
+            memcpy(asset->ptr, apparition_texture_1, asset->segmentedSize);
+            return;
+        case 0x00008800:
+            memcpy(asset->ptr, apparition_texture_2, asset->segmentedSize);
+            return;
+        case 0x00009000:
+            memcpy(asset->ptr, apparition_texture_3, asset->segmentedSize);
+            return;
+        case 0x00009800:
+            memcpy(asset->ptr, apparition_texture_4, asset->segmentedSize);
+            return;
         }
     }
     switch (asset->assetType) {
-        case ROM_ASSET_VTX:       rom_asset_load_vtx(asset); break;
-        case ROM_ASSET_TEXTURE:   ROM_ASSET_LOAD_DATA(8);    break;
-        case ROM_ASSET_SAMPLE:    ROM_ASSET_LOAD_DATA(8);    break;
-        case ROM_ASSET_COLLISION: ROM_ASSET_LOAD_DATA(16);   break;
-        case ROM_ASSET_ANIM:      ROM_ASSET_LOAD_DATA(16);   break;
-        case ROM_ASSET_DIALOG:    ROM_ASSET_LOAD_DATA(8);    break;
-        case ROM_ASSET_DEMO:      ROM_ASSET_LOAD_DATA(8);    break;
-        default:
-            LOG_ERROR("Could not load unknown asset type %u!", asset->assetType);
+    case ROM_ASSET_VTX:
+        rom_asset_load_vtx(asset);
+        break;
+    case ROM_ASSET_TEXTURE:
+        ROM_ASSET_LOAD_DATA(8);
+        break;
+    case ROM_ASSET_SAMPLE:
+        ROM_ASSET_LOAD_DATA(8);
+        break;
+    case ROM_ASSET_COLLISION:
+        ROM_ASSET_LOAD_DATA(16);
+        break;
+    case ROM_ASSET_ANIM:
+        ROM_ASSET_LOAD_DATA(16);
+        break;
+    case ROM_ASSET_DIALOG:
+        ROM_ASSET_LOAD_DATA(8);
+        break;
+    case ROM_ASSET_DEMO:
+        ROM_ASSET_LOAD_DATA(8);
+        break;
+    default:
+        LOG_ERROR("Could not load unknown asset type %u!", asset->assetType);
     }
 }
 
@@ -175,7 +204,7 @@ void rom_assets_load(void) {
     while (sRomAssets) {
         rom_asset_load(sRomAssets);
 
-        struct RomAsset* next = sRomAssets->next;
+        struct RomAsset *next = sRomAssets->next;
         free(sRomAssets);
         sRomAssets = next;
     }
@@ -188,8 +217,8 @@ void rom_assets_load(void) {
     fclose(sRomFile);
 }
 
-void rom_assets_queue(void* ptr, enum RomAssetType assetType, u32 physicalAddress, u32 physicalSize, u32 segmentedAddress, u32 segmentedSize) {
-    struct RomAsset* asset = (struct RomAsset*)calloc(1, sizeof(struct RomAsset));
+void rom_assets_queue(void *ptr, enum RomAssetType assetType, u32 physicalAddress, u32 physicalSize, u32 segmentedAddress, u32 segmentedSize) {
+    struct RomAsset *asset = (struct RomAsset *) calloc(1, sizeof(struct RomAsset));
     asset->ptr = ptr;
     asset->assetType = assetType;
     asset->physicalAddress = physicalAddress;
@@ -202,19 +231,19 @@ void rom_assets_queue(void* ptr, enum RomAssetType assetType, u32 physicalAddres
     LOG_INFO("added asset");
 }
 
-u8* rom_assets_decompress(u32* data, u32* decompressedSize) {
+u8 *rom_assets_decompress(u32 *data, u32 *decompressedSize) {
     if (BSWAP32(data[0]) != 0x4d494f30) {
         return NULL;
     }
 
     // ripped from tools/gen_asset_list.cpp
-    uint32_t* src = data;
+    uint32_t *src = data;
     uint32_t size = BSWAP32(src[1]);
-    u8* output = calloc(size, 1);
-    char *dest = (char *)output;
+    u8 *output = calloc(size, 1);
+    char *dest = (char *) output;
     char *destEnd = (size + dest);
-    uint16_t *cmpOffset = (uint16_t *)((char *)src + BSWAP32(src[2]));
-    char *rawOffset = ((char *)src + BSWAP32(src[3]));
+    uint16_t *cmpOffset = (uint16_t *) ((char *) src + BSWAP32(src[2]));
+    char *rawOffset = ((char *) src + BSWAP32(src[3]));
     int counter = 0;
     uint32_t controlBits;
 
@@ -229,12 +258,11 @@ u8* rom_assets_decompress(u32* data, u32* decompressedSize) {
 
         if (controlBits & 0x80000000) {
             *dest++ = *rawOffset++;
-        }
-        else {
+        } else {
             uint16_t dcmpParam = *cmpOffset++;
             dcmpParam = BSWAP16(dcmpParam);
             int dcmpCount = (dcmpParam >> 12) + 3;
-            char* dcmpPtr = dest - (dcmpParam & 0x0FFF);
+            char *dcmpPtr = dest - (dcmpParam & 0x0FFF);
 
             while (dcmpCount) {
                 *dest++ = dcmpPtr[-1];

@@ -6,7 +6,7 @@
 
 #include <strings.h>
 #include <stdlib.h>
-#define __NO_MINGW_LFS //Mysterious error in MinGW.org stdio.h
+#define __NO_MINGW_LFS // Mysterious error in MinGW.org stdio.h
 #include <stdio.h>
 #include <string.h>
 
@@ -56,7 +56,7 @@ static inline int arg_uint(UNUSED const char *name, const char *value, unsigned 
     return 1;
 }
 
-bool parse_cli_opts(int argc, char* argv[]) {
+bool parse_cli_opts(int argc, char *argv[]) {
     // initialize options with false values
     memset(&gCLIOpts, 0, sizeof(gCLIOpts));
     gCLIOpts.enableMods = NULL;
@@ -114,9 +114,9 @@ bool parse_cli_opts(int argc, char* argv[]) {
         } else if (!strcmp(argv[i], "--enable-mod") && (i + 1) < argc) {
             gCLIOpts.enabledModsCount++;
             if (gCLIOpts.enableMods == NULL) {
-                gCLIOpts.enableMods = malloc(sizeof(char*));
+                gCLIOpts.enableMods = malloc(sizeof(char *));
             } else {
-                gCLIOpts.enableMods = realloc(gCLIOpts.enableMods, sizeof(char*) * gCLIOpts.enabledModsCount);
+                gCLIOpts.enableMods = realloc(gCLIOpts.enableMods, sizeof(char *) * gCLIOpts.enabledModsCount);
             }
             gCLIOpts.enableMods[gCLIOpts.enabledModsCount - 1] = strdup(argv[++i]);
         } else if (!strcmp(argv[i], "--headless")) {

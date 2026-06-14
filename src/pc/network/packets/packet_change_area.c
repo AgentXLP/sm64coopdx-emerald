@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include "../network.h"
 #include "level_table.h"
-//#define DISABLE_MODULE_LOG 1
+// #define DISABLE_MODULE_LOG 1
 #include "pc/debuglog.h"
 
 static void player_changed_area(struct NetworkPlayer *np, s16 courseNum, s16 actNum, s16 levelNum, s16 areaIndex) {
     // set NetworkPlayer variables
-    np->currAreaSyncValid  = false;
+    np->currAreaSyncValid = false;
     network_player_update_course_level(np, courseNum, actNum, levelNum, areaIndex);
 
     // find a NetworkPlayer at that area
@@ -39,16 +39,16 @@ void network_send_change_area(void) {
         return;
     }
 
-    struct Packet p = { 0 };
+    struct Packet p = {0};
     packet_init(&p, PACKET_CHANGE_AREA, true, PLMT_NONE);
-    packet_write(&p, &gCurrCourseNum,  sizeof(s16));
+    packet_write(&p, &gCurrCourseNum, sizeof(s16));
     packet_write(&p, &gCurrActStarNum, sizeof(s16));
-    packet_write(&p, &gCurrLevelNum,   sizeof(s16));
-    packet_write(&p, &gCurrAreaIndex,  sizeof(s16));
+    packet_write(&p, &gCurrLevelNum, sizeof(s16));
+    packet_write(&p, &gCurrAreaIndex, sizeof(s16));
     network_send_to(gNetworkPlayerServer->localIndex, &p);
 
-    struct NetworkPlayer* np = gNetworkPlayerLocal;
-    np->currAreaSyncValid  = false;
+    struct NetworkPlayer *np = gNetworkPlayerLocal;
+    np->currAreaSyncValid = false;
     network_player_update_course_level(np, gCurrCourseNum, gCurrActStarNum, gCurrLevelNum, gCurrAreaIndex);
 
     LOG_INFO("tx change area");
@@ -66,8 +66,8 @@ void network_receive_change_area(struct Packet *p) {
 
     s16 courseNum, actNum, levelNum, areaIndex;
     packet_read(p, &courseNum, sizeof(s16));
-    packet_read(p, &actNum,    sizeof(s16));
-    packet_read(p, &levelNum,  sizeof(s16));
+    packet_read(p, &actNum, sizeof(s16));
+    packet_read(p, &levelNum, sizeof(s16));
     packet_read(p, &areaIndex, sizeof(s16));
 
     player_changed_area(np, courseNum, actNum, levelNum, areaIndex);

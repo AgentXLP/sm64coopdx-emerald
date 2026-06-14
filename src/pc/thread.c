@@ -13,14 +13,14 @@ int init_thread_handle(struct ThreadHandle *handle, void *(*entry)(void *), void
 void free_thread_handle(struct ThreadHandle *handle) {
     assert(handle != NULL);
 
-    //int err = stop_thread(handle);
-    //assert(err == 0);
+    // int err = stop_thread(handle);
+    // assert(err == 0);
 
     int err = destroy_mutex(handle);
     assert(err == 0);
 
     // Reset the memory of the thread handle, We no longer need the thread or mutex.
-    memset((void *)handle, 0, sizeof(struct ThreadHandle));
+    memset((void *) handle, 0, sizeof(struct ThreadHandle));
 }
 
 // Optimally just call init_thread_handle instead.
@@ -28,7 +28,7 @@ int init_thread(struct ThreadHandle *handle, void *(*entry)(void *), void *arg, 
     assert(handle != NULL);
 
     // Setup our thread and create it.
-    pthread_attr_t thattr = { 0 };
+    pthread_attr_t thattr = {0};
 
     // Initialize default attributes for a new thread.
     int err = pthread_attr_init(&thattr);

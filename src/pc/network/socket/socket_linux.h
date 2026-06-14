@@ -10,7 +10,7 @@
 #include <netdb.h>
 
 #define SOCKET unsigned int
-#define INVALID_SOCKET (unsigned int)(-1)
+#define INVALID_SOCKET (unsigned int) (-1)
 #define SOCKET_LAST_ERROR errno
 #define NO_ERROR (0)
 #define SOCKADDR struct sockaddr

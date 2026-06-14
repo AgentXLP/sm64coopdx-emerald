@@ -11,7 +11,7 @@
 extern "C" {
 #include "platform.h"
 #include "mods/mods_utils.h" // for path_ends_with
-#include "mods/mod_cache.h"  // for md5 hashing
+#include "mods/mod_cache.h" // for md5 hashing
 #include "mods/mods.h"
 #include "loading.h"
 #include "fs/fs.h"
@@ -32,8 +32,8 @@ static struct VanillaMD5 sVanillaMD5[] = {
     // { "eu", "45676429ef6b90e65b517129b700308e" },
     // { "jp", "85d61f5525af708c9f1e84dce6dc10e9" },
     // { "sh", "2d727c3278aa232d94f2fb45aec4d303" },
-    { "us", "20b854b239203baf6c961b850a4a51a2" },
-    { NULL, NULL },
+    {"us", "20b854b239203baf6c961b850a4a51a2"},
+    {NULL, NULL},
 };
 
 inline static void rename_tmp_folder() {
@@ -49,7 +49,7 @@ inline static void rename_tmp_folder() {
 }
 
 static bool is_rom_valid(const std::string romPath) {
-    u8 dataHash[16] = { 0 };
+    u8 dataHash[16] = {0};
     mod_cache_md5(romPath.c_str(), dataHash);
 
     std::stringstream ss;
@@ -65,8 +65,7 @@ static bool is_rom_valid(const std::string romPath) {
             if (romPath != destPath && !std::filesystem::exists(std::filesystem::path(destPath))) {
                 std::filesystem::copy_file(
                     std::filesystem::path(romPath),
-                    std::filesystem::path(destPath)
-                );
+                    std::filesystem::path(destPath));
             }
 
             snprintf(gRomFilename, SYS_MAX_PATH, "%s", destPath.c_str()); // Load the copied rom
@@ -79,10 +78,12 @@ static bool is_rom_valid(const std::string romPath) {
 }
 
 inline static bool scan_path_for_rom(const char *dir) {
-    for (const auto &entry: std::filesystem::directory_iterator(dir)) {
+    for (const auto &entry : std::filesystem::directory_iterator(dir)) {
         std::string path = entry.path().generic_string();
         if (path_ends_with(path.c_str(), ".z64")) {
-            if (is_rom_valid(path)) { return true; }
+            if (is_rom_valid(path)) {
+                return true;
+            }
         }
     }
     return false;
@@ -94,7 +95,9 @@ void legacy_folder_handler(void) {
 }
 
 bool main_rom_handler(void) {
-    if (scan_path_for_rom(fs_get_write_path(""))) { return true; }
+    if (scan_path_for_rom(fs_get_write_path(""))) {
+        return true;
+    }
     scan_path_for_rom(sys_exe_path_dir());
     return gRomIsValid;
 }

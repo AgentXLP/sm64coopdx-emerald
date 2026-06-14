@@ -7,7 +7,7 @@
 #include "pc/mods/mods_utils.h"
 #include "pc/utils/misc.h"
 #include "pc/djui/djui_panel_join_message.h"
-//#define DISABLE_MODULE_LOG 1
+// #define DISABLE_MODULE_LOG 1
 #include "pc/debuglog.h"
 #include "pc/fs/fmem.h"
 
@@ -21,15 +21,15 @@ struct OffsetGroup {
     bool active;
 };
 
-static struct OffsetGroup sOffsetGroup[2] = { 0 };
-static bool* sOffsetGroupsCompleted = NULL;
+static struct OffsetGroup sOffsetGroup[2] = {0};
+static bool *sOffsetGroupsCompleted = NULL;
 static u64 sOffsetGroupCount = 0;
 
 static u64 sTotalDownloadBytes = 0;
 static f32 sDownloadStartTime = 0;
 static u64 sDownloadReceivedBytes = 0;
 
-static bool network_start_offset_group(struct OffsetGroup* og);
+static bool network_start_offset_group(struct OffsetGroup *og);
 static void network_update_offset_groups(void);
 static void mark_groups_loaded_from_hash(void);
 
@@ -56,7 +56,7 @@ void network_start_download_requests(void) {
 }
 
 static void mark_groups_loaded_from_hash(void) {
-    u8* offsetGroupRequired = calloc(sOffsetGroupCount, sizeof(u8));
+    u8 *offsetGroupRequired = calloc(sOffsetGroupCount, sizeof(u8));
     if (offsetGroupRequired == NULL) {
         LOG_ERROR("Failed to allocate offsetGroupRequired");
         return;
@@ -65,13 +65,13 @@ static void mark_groups_loaded_from_hash(void) {
     sTotalDownloadBytes = 0;
     u64 fileStartOffset = 0;
     for (u64 modIndex = 0; modIndex < gRemoteMods.entryCount; modIndex++) {
-        struct Mod* mod = gRemoteMods.entries[modIndex];
+        struct Mod *mod = gRemoteMods.entries[modIndex];
         for (u64 fileIndex = 0; fileIndex < mod->fileCount; fileIndex++) {
-            struct ModFile* file = &mod->files[fileIndex];
+            struct ModFile *file = &mod->files[fileIndex];
             if (file->cachedPath != NULL) {
                 // if we loaded from cache, mark bytes as downloaded
                 sTotalDownloadBytes += file->size;
-                LOG_INFO("Loaded from cache: %s, %llu", file->cachedPath, (u64)file->size);
+                LOG_INFO("Loaded from cache: %s, %llu", file->cachedPath, (u64) file->size);
             } else {
                 // if we haven't loaded from cache, we need this offset group
                 u64 ogIndexStart = fileStartOffset / GROUP_SIZE;
@@ -99,7 +99,7 @@ static void mark_groups_loaded_from_hash(void) {
     free(offsetGroupRequired);
 }
 
-static bool network_start_offset_group(struct OffsetGroup* og) {
+static bool network_start_offset_group(struct OffsetGroup *og) {
 
     // sanity check
     if (og->active) {
@@ -113,9 +113,9 @@ static bool network_start_offset_group(struct OffsetGroup* og) {
     u64 offset = 0;
     for (u32 i = 0; i < sOffsetGroupCount; i++) {
         // skip this offset if its in progress
-        struct OffsetGroup* otherOg = (og == &sOffsetGroup[0])
-            ? &sOffsetGroup[1]
-            : &sOffsetGroup[0];
+        struct OffsetGroup *otherOg = (og == &sOffsetGroup[0])
+                                          ? &sOffsetGroup[1]
+                                          : &sOffsetGroup[0];
         if (otherOg->active && otherOg->offset[0] == (i * GROUP_SIZE)) {
             continue;
         }
@@ -156,13 +156,15 @@ static void network_update_offset_groups(void) {
     }
 
     // figure out group progress
-    u32 groupProgress[2] = { 0 };
+    u32 groupProgress[2] = {0};
     for (u32 i = 0; i < 2; i++) {
-        struct OffsetGroup* og = &sOffsetGroup[i];
+        struct OffsetGroup *og = &sOffsetGroup[i];
 
         // count how many chunks were received
         for (u32 j = 0; j < OFFSET_COUNT; j++) {
-            if (og->rx[j]) { groupProgress[i]++; }
+            if (og->rx[j]) {
+                groupProgress[i]++;
+            }
         }
 
         // mark finished if finished
@@ -188,10 +190,12 @@ static void network_update_offset_groups(void) {
     if (completedDownload) {
         // close and flush all file pointers
         for (u64 modIndex = 0; modIndex < gRemoteMods.entryCount; modIndex++) {
-            struct Mod* mod = gRemoteMods.entries[modIndex];
+            struct Mod *mod = gRemoteMods.entries[modIndex];
             for (u64 fileIndex = 0; fileIndex < mod->fileCount; fileIndex++) {
-                struct ModFile* modFile = &mod->files[fileIndex];
-                if (modFile->fp == NULL) { continue; }
+                struct ModFile *modFile = &mod->files[fileIndex];
+                if (modFile->fp == NULL) {
+                    continue;
+                }
                 f_flush(modFile->fp);
                 f_close(modFile->fp);
                 modFile->fp = NULL;
@@ -206,8 +210,8 @@ static void network_update_offset_groups(void) {
     // if one group is more than half complete, and the other group is complete, start the other group
     for (u32 i = 0; i < 2; i++) {
         u32 o = (i + 1) % 2;
-        struct OffsetGroup* otherOg = &sOffsetGroup[o];
-        if ((groupProgress[i] >= (OFFSET_COUNT/2)) && ((groupProgress[o] >= OFFSET_COUNT) || !otherOg->active)) {
+        struct OffsetGroup *otherOg = &sOffsetGroup[o];
+        if ((groupProgress[i] >= (OFFSET_COUNT / 2)) && ((groupProgress[o] >= OFFSET_COUNT) || !otherOg->active)) {
             network_start_offset_group(otherOg);
             return;
         }
@@ -217,7 +221,7 @@ static void network_update_offset_groups(void) {
 void network_send_download_request(u64 offset) {
     SOFT_ASSERT(gNetworkType == NT_CLIENT);
 
-    struct Packet p = { 0 };
+    struct Packet p = {0};
     packet_init(&p, PACKET_DOWNLOAD_REQUEST, true, PLMT_NONE);
     packet_write(&p, &offset, sizeof(u64));
 
@@ -226,7 +230,7 @@ void network_send_download_request(u64 offset) {
     LOG_INFO("Requesting group: %llu [ %llu <---> %llu ]", (offset / GROUP_SIZE), offset, offset + GROUP_SIZE);
 }
 
-void network_receive_download_request(struct Packet* p) {
+void network_receive_download_request(struct Packet *p) {
     SOFT_ASSERT(gNetworkType == NT_SERVER);
 
     // receive requested offset
@@ -245,13 +249,13 @@ void network_receive_download_request(struct Packet* p) {
 }
 
 void network_send_download(u64 requestOffset) {
-    u8 chunk[CHUNK_SIZE] = { 0 };
+    u8 chunk[CHUNK_SIZE] = {0};
     u64 chunkFill = 0;
     u64 fileStartOffset = 0;
 
     // fill up chunk
     for (u64 modIndex = 0; modIndex < gActiveMods.entryCount; modIndex++) {
-        struct Mod* mod = gActiveMods.entries[modIndex];
+        struct Mod *mod = gActiveMods.entries[modIndex];
 
         // skip past mods to get to the right offset
         if ((fileStartOffset + mod->size) < requestOffset) {
@@ -260,7 +264,7 @@ void network_send_download(u64 requestOffset) {
         }
 
         for (u64 fileIndex = 0; fileIndex < mod->fileCount; fileIndex++) {
-            struct ModFile* modFile = &mod->files[fileIndex];
+            struct ModFile *modFile = &mod->files[fileIndex];
 
             // skip past mod files to get to the right offset
             if ((fileStartOffset + modFile->size) < requestOffset) {
@@ -269,7 +273,7 @@ void network_send_download(u64 requestOffset) {
             }
 
             // calculate file offset and read length
-            u64 fileReadOffset = MAX(((s64)requestOffset - (s64)fileStartOffset), 0);
+            u64 fileReadOffset = MAX(((s64) requestOffset - (s64) fileStartOffset), 0);
             u64 fileReadLength = MIN((modFile->size - fileReadOffset), (CHUNK_SIZE - chunkFill));
 
             // open file pointer
@@ -306,14 +310,14 @@ void network_send_download(u64 requestOffset) {
 after_filled:;
 
     // send the packet
-    struct Packet p = { 0 };
+    struct Packet p = {0};
     packet_init(&p, PACKET_DOWNLOAD, true, PLMT_NONE);
     packet_write(&p, &requestOffset, sizeof(u64));
-    packet_write(&p, &chunkFill,    sizeof(u64));
-    packet_write(&p, &chunk,        sizeof(u8) * chunkFill);
+    packet_write(&p, &chunkFill, sizeof(u64));
+    packet_write(&p, &chunk, sizeof(u8) * chunkFill);
     network_send_to(0, &p);
 
-    //LOG_INFO("Sent chunk: offset %llu, length %llu", requestOffset, chunkFill);
+    // LOG_INFO("Sent chunk: offset %llu, length %llu", requestOffset, chunkFill);
 }
 
 // Cache any mod that doesn't have "(wip)" or "[wip]" in its name (case-insensitive)
@@ -321,19 +325,17 @@ static bool should_cache_mod(struct Mod *mod) {
     char modNameLowercase[MOD_NAME_SIZE];
     memcpy(modNameLowercase, mod->name, MOD_NAME_SIZE * sizeof(char));
     sys_strlwr(modNameLowercase);
-    bool shouldCache = (
-        !strstr(modNameLowercase, "(wip)") &&
-        !strstr(modNameLowercase, "[wip]")
-    );
+    bool shouldCache = (!strstr(modNameLowercase, "(wip)") &&
+                        !strstr(modNameLowercase, "[wip]"));
     return shouldCache;
 }
 
-static void open_mod_file(struct Mod* mod, struct ModFile* file) {
+static void open_mod_file(struct Mod *mod, struct ModFile *file) {
     if (file->fp != NULL) {
         return;
     }
 
-    char fullPath[SYS_MAX_PATH] = { 0 };
+    char fullPath[SYS_MAX_PATH] = {0};
     if (!mod_file_full_path(fullPath, mod, file)) {
         LOG_ERROR("unable to concat full path!");
         return;
@@ -353,7 +355,7 @@ static void open_mod_file(struct Mod* mod, struct ModFile* file) {
     LOG_INFO("Opened mod file pointer: %s", fullPath);
 }
 
-void network_receive_download(struct Packet* p) {
+void network_receive_download(struct Packet *p) {
     if (!p) {
         LOG_ERROR("Received null packet");
         return;
@@ -368,22 +370,24 @@ void network_receive_download(struct Packet* p) {
     }
 
     // read the chunk
-    u64 receiveOffset     = 0;
-    u64 chunkLength       = 0;
-    u8  chunk[CHUNK_SIZE+1] = { 0 };
+    u64 receiveOffset = 0;
+    u64 chunkLength = 0;
+    u8 chunk[CHUNK_SIZE + 1] = {0};
     packet_read(p, &receiveOffset, sizeof(u64));
-    packet_read(p, &chunkLength,   sizeof(u64));
+    packet_read(p, &chunkLength, sizeof(u64));
     if (chunkLength > CHUNK_SIZE) {
         LOG_ERROR("Received improper chunk length");
         return;
     }
-    packet_read(p, &chunk,         sizeof(u8) * chunkLength);
+    packet_read(p, &chunk, sizeof(u8) * chunkLength);
 
     // mark the offset group as received
     bool foundGroup = false;
     for (u64 i = 0; i < 2; i++) {
-        struct OffsetGroup* og = &sOffsetGroup[i];
-        if (!og->active) { continue; }
+        struct OffsetGroup *og = &sOffsetGroup[i];
+        if (!og->active) {
+            continue;
+        }
         for (u64 j = 0; j < OFFSET_COUNT; j++) {
             if (og->offset[j] != receiveOffset) {
                 continue;
@@ -409,7 +413,7 @@ after_group:;
     u64 chunkPour = 0;
     u64 fileStartOffset = 0;
     for (u64 modIndex = 0; modIndex < gRemoteMods.entryCount; modIndex++) {
-        struct Mod* mod = gRemoteMods.entries[modIndex];
+        struct Mod *mod = gRemoteMods.entries[modIndex];
         if (!mod) {
             LOG_ERROR("Null mod");
             continue;
@@ -427,7 +431,7 @@ after_group:;
         }
 
         for (u64 fileIndex = 0; fileIndex < mod->fileCount; fileIndex++) {
-            struct ModFile* modFile = &mod->files[fileIndex];
+            struct ModFile *modFile = &mod->files[fileIndex];
 
             // skip past mod files to get to the right offset
             if ((fileStartOffset + modFile->size) < receiveOffset) {
@@ -436,7 +440,7 @@ after_group:;
             }
 
             // calculate file offset and read length
-            u64 fileWriteOffset = MAX(((s64)receiveOffset - (s64)fileStartOffset), 0);
+            u64 fileWriteOffset = MAX(((s64) receiveOffset - (s64) fileStartOffset), 0);
             u64 fileWriteLength = MIN((modFile->size - fileWriteOffset), (chunkLength - chunkPour));
 
             // read from file, filling chunk
@@ -457,7 +461,7 @@ after_group:;
 
                     // Write cachedPath here so the file doesn't end up in mod.cache
                     if (!should_cache_mod(mod)) {
-                        char modFilePath[SYS_MAX_PATH] = { 0 };
+                        char modFilePath[SYS_MAX_PATH] = {0};
                         concat_path(modFilePath, mod->basePath, modFile->relativePath);
                         normalize_path(modFilePath);
                         modFile->cachedPath = strdup(modFilePath);
@@ -468,7 +472,7 @@ after_group:;
             }
 
             // increment counters
-            chunkPour       += fileWriteLength;
+            chunkPour += fileWriteLength;
             fileStartOffset += modFile->size;
 
             // check if we've filled the chunk
@@ -483,13 +487,13 @@ after_poured:;
 
     // update progress
     sTotalDownloadBytes += wroteBytes;
-    gDownloadProgress = (f32)sTotalDownloadBytes / (f32)gRemoteMods.size;
-    gDownloadProgressInf += 0.01f * ((f32)wroteBytes / (f32)CHUNK_SIZE);
+    gDownloadProgress = (f32) sTotalDownloadBytes / (f32) gRemoteMods.size;
+    gDownloadProgressInf += 0.01f * ((f32) wroteBytes / (f32) CHUNK_SIZE);
 
     // update speed
     f32 elapsed = clock_elapsed() - sDownloadStartTime;
     sDownloadReceivedBytes += wroteBytes;
-    f32 bytesPerSecond = (f32)sDownloadReceivedBytes / elapsed;
+    f32 bytesPerSecond = (f32) sDownloadReceivedBytes / elapsed;
 
     // update estimated time
     u64 remaining = gRemoteMods.size - sTotalDownloadBytes;

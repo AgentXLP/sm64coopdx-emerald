@@ -17,7 +17,7 @@ void network_send_leaving(u8 globalIndex) {
         globalIndex = gNetworkPlayerLocal->globalIndex;
     }
 
-    struct Packet p = { 0 };
+    struct Packet p = {0};
     packet_init(&p, PACKET_LEAVING, true, PLMT_NONE);
     packet_write(&p, &globalIndex, sizeof(u8));
     if (gNetworkType == NT_SERVER) {
@@ -28,7 +28,7 @@ void network_send_leaving(u8 globalIndex) {
     LOG_INFO("Sending leaving event for %d", globalIndex);
 }
 
-void network_receive_leaving(struct Packet* p) {
+void network_receive_leaving(struct Packet *p) {
     if (gNetworkType != NT_SERVER && network_player_any_connected() && gNetworkPlayers[p->localIndex].type != NPT_SERVER) {
         LOG_ERROR("Leaving came from non-server... refuse!");
         return;

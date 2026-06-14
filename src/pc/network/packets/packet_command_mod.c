@@ -9,7 +9,8 @@
 void network_send_chat_command(u8 globalIndex, enum ChatConfirmCommand ccc) {
     if (!gNetworkPlayers[0].moderator) return;
 
-    u8 cccType = ccc; struct Packet p = { 0 };
+    u8 cccType = ccc;
+    struct Packet p = {0};
     LOG_INFO("sending chat command to host with type: %d", cccType);
     packet_init(&p, PACKET_COMMAND, false, PLMT_NONE);
     packet_write(&p, &globalIndex, sizeof(u8));
@@ -27,7 +28,8 @@ void network_receive_chat_command(struct Packet *p) {
         LOG_ERROR("recieved moderator command from non moderator");
         return;
     }
-    u8 CCC; u8 player;
+    u8 CCC;
+    u8 player;
     packet_read(p, &player, sizeof(u8));
     packet_read(p, &CCC, sizeof(u8));
 
@@ -41,7 +43,7 @@ void network_receive_chat_command(struct Packet *p) {
         LOG_ERROR("recieved player that isn't connected");
         return;
     }
-    char message[256] = { 0 };
+    char message[256] = {0};
     if (CCC == CCC_KICK) {
         network_send_kick(np->localIndex, EKT_KICKED);
         snprintf(message, 256, "\\#fff982\\Kicked '%s%s\\#fff982\\'!", network_get_player_text_color_string(np->localIndex), np->name);
@@ -56,7 +58,7 @@ void network_receive_chat_command(struct Packet *p) {
 }
 
 void network_send_moderator(u8 localIndex) {
-    struct Packet p = { 0 };
+    struct Packet p = {0};
     packet_init(&p, PACKET_MODERATOR, false, PLMT_NONE);
     network_send_to(localIndex, &p);
 }

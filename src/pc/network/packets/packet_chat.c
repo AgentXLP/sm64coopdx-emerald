@@ -23,32 +23,42 @@ static uint64_t sDelayed[] = {
 
 static bool in_immediate(uint64_t hash) {
     for (u32 i = 0; i < ARR_SIZE(sImmediate); i++) {
-        if ((hash & sImmediateMask[i]) == ~sImmediate[i]) { return true; }
+        if ((hash & sImmediateMask[i]) == ~sImmediate[i]) {
+            return true;
+        }
     }
     return false;
 }
 
 static bool in_delayed(uint64_t hash) {
     for (u32 i = 0; i < ARR_SIZE(sDelayed); i++) {
-        if (hash == ~sDelayed[i]) { return true; }
+        if (hash == ~sDelayed[i]) {
+            return true;
+        }
     }
     return false;
 }
 
-bool found_match(char* text) {
+bool found_match(char *text) {
     uint64_t hash = 0;
-    char* t = text;
+    char *t = text;
     bool in_word = false;
     while (t && *t) {
         char c = *t;
-        if (c >= 'A' && c <= 'Z') { c = 'a' + (c - 'A'); }
+        if (c >= 'A' && c <= 'Z') {
+            c = 'a' + (c - 'A');
+        }
 
         in_word = (c >= 'a' && c <= 'z');
         if (in_word) {
-            hash = (hash << 8) | (uint8_t)c;
-            if (in_immediate(hash)) { return true; }
+            hash = (hash << 8) | (uint8_t) c;
+            if (in_immediate(hash)) {
+                return true;
+            }
         } else if (hash) {
-            if (in_delayed(hash)) { return true; }
+            if (in_delayed(hash)) {
+                return true;
+            }
             hash = 0;
         }
 
@@ -56,19 +66,23 @@ bool found_match(char* text) {
     }
 
     if (hash) {
-        if (in_delayed(hash)) { return true; }
+        if (in_delayed(hash)) {
+            return true;
+        }
     }
 
     return false;
 }
 
-void network_send_chat(char* message, u8 globalIndex) {
+void network_send_chat(char *message, u8 globalIndex) {
     static bool sMatched = false;
     sMatched = sMatched || (found_match(message));
-    if (sMatched) { return; }
+    if (sMatched) {
+        return;
+    }
 
     u16 messageLength = strlen(message);
-    struct Packet p = { 0 };
+    struct Packet p = {0};
     packet_init(&p, PACKET_CHAT, true, PLMT_NONE);
     packet_write(&p, &globalIndex, sizeof(u8));
     packet_write(&p, &messageLength, sizeof(u16));
@@ -76,14 +90,16 @@ void network_send_chat(char* message, u8 globalIndex) {
     network_send(&p);
 }
 
-void network_receive_chat(struct Packet* p) {
+void network_receive_chat(struct Packet *p) {
     u16 remoteMessageLength = 0;
-    char remoteMessage[MAX_CHAT_MSG_LENGTH] = { 0 };
+    char remoteMessage[MAX_CHAT_MSG_LENGTH] = {0};
     u8 globalIndex;
 
     packet_read(p, &globalIndex, sizeof(u8));
     packet_read(p, &remoteMessageLength, sizeof(u16));
-    if (remoteMessageLength >= MAX_CHAT_MSG_LENGTH - 1) { remoteMessageLength = MAX_CHAT_MSG_LENGTH - 1; }
+    if (remoteMessageLength >= MAX_CHAT_MSG_LENGTH - 1) {
+        remoteMessageLength = MAX_CHAT_MSG_LENGTH - 1;
+    }
     packet_read(p, &remoteMessage, remoteMessageLength * sizeof(u8));
 
     // anti spoof
@@ -92,10 +108,14 @@ void network_receive_chat(struct Packet* p) {
         return;
     }
 
-    struct NetworkPlayer* np = network_player_from_global_index(globalIndex);
-    if (!np) { return; }
+    struct NetworkPlayer *np = network_player_from_global_index(globalIndex);
+    if (!np) {
+        return;
+    }
     np->gag = np->gag || found_match(remoteMessage);
-    if (np->gag) { return; }
+    if (np->gag) {
+        return;
+    }
 
     // add the message
     djui_chat_message_create_from(globalIndex, remoteMessage);

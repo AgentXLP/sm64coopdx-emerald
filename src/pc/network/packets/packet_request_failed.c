@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "../network.h"
-//#define DISABLE_MODULE_LOG 1
+// #define DISABLE_MODULE_LOG 1
 #include "pc/debuglog.h"
 
 void network_send_request_failed(struct NetworkPlayer *toNp, u8 requestType) {
@@ -16,7 +16,7 @@ void network_send_request_failed(struct NetworkPlayer *toNp, u8 requestType) {
         return;
     }
 
-    struct Packet p = { 0 };
+    struct Packet p = {0};
     packet_init(&p, PACKET_REQUEST_FAILED, true, PLMT_NONE);
     packet_write(&p, &requestType, sizeof(u8));
 

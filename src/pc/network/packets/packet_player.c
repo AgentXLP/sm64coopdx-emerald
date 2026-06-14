@@ -46,11 +46,11 @@ struct PacketPlayerData {
     f32 intendedMag;
     s16 intendedYaw;
     s16 invincTimer;
-    u8  framesSinceA;
-    u8  framesSinceB;
-    u8  wallKickTimer;
-    u8  doubleJumpTimer;
-    u8  specialTripleJump;
+    u8 framesSinceA;
+    u8 framesSinceB;
+    u8 wallKickTimer;
+    u8 doubleJumpTimer;
+    u8 specialTripleJump;
     Vec3s faceAngle;
     Vec3s angleVel;
     s16 slideYaw;
@@ -61,12 +61,12 @@ struct PacketPlayerData {
     f32 slideVelX;
     f32 slideVelZ;
     s16 health;
-    u8  squishTimer;
+    u8 squishTimer;
     f32 peakHeight;
     s16 currentRoom;
     Vec3s headRotation;
 
-    u8  customFlags;
+    u8 customFlags;
     u32 heldSyncID;
     u32 heldBySyncID;
     u32 riddenSyncID;
@@ -82,71 +82,71 @@ struct PacketPlayerData {
 };
 #pragma pack()
 
-static void read_packet_data(struct PacketPlayerData* data, struct MarioState* m) {
-    u32 heldSyncID     = (m->heldObj != NULL)            ? m->heldObj->oSyncID            : 0;
-    u32 heldBySyncID   = (m->heldByObj != NULL)          ? m->heldByObj->oSyncID          : 0;
-    u32 riddenSyncID   = (m->riddenObj != NULL)          ? m->riddenObj->oSyncID          : 0;
-    u32 interactSyncID = (m->interactObj != NULL)        ? m->interactObj->oSyncID        : 0;
-    u32 usedSyncID     = (m->usedObj != NULL)            ? m->usedObj->oSyncID            : 0;
+static void read_packet_data(struct PacketPlayerData *data, struct MarioState *m) {
+    u32 heldSyncID = (m->heldObj != NULL) ? m->heldObj->oSyncID : 0;
+    u32 heldBySyncID = (m->heldByObj != NULL) ? m->heldByObj->oSyncID : 0;
+    u32 riddenSyncID = (m->riddenObj != NULL) ? m->riddenObj->oSyncID : 0;
+    u32 interactSyncID = (m->interactObj != NULL) ? m->interactObj->oSyncID : 0;
+    u32 usedSyncID = (m->usedObj != NULL) ? m->usedObj->oSyncID : 0;
     u32 platformSyncID = (m->marioObj->platform != NULL) ? m->marioObj->platform->oSyncID : 0;
 
-    u8 customFlags     = SET_BIT((m->freeze > 0), 0);
+    u8 customFlags = SET_BIT((m->freeze > 0), 0);
 
     memcpy(data->rawData, m->marioObj->rawData.asU32, sizeof(u32) * OBJECT_NUM_REGULAR_FIELDS);
-    data->nodeFlags    = m->marioObj->header.gfx.node.flags;
+    data->nodeFlags = m->marioObj->header.gfx.node.flags;
 
-    data->cRawStickX      = m->controller->rawStickX;
-    data->cRawStickY      = m->controller->rawStickY;
-    data->cStickX         = m->controller->stickX;
-    data->cStickY         = m->controller->stickY;
-    data->cStickMag       = m->controller->stickMag;
-    data->cButtonDown     = m->controller->buttonDown;
-    data->cButtonPressed  = m->controller->buttonPressed;
+    data->cRawStickX = m->controller->rawStickX;
+    data->cRawStickY = m->controller->rawStickY;
+    data->cStickX = m->controller->stickX;
+    data->cStickY = m->controller->stickY;
+    data->cStickMag = m->controller->stickMag;
+    data->cButtonDown = m->controller->buttonDown;
+    data->cButtonPressed = m->controller->buttonPressed;
     data->cButtonReleased = m->controller->buttonReleased;
-    data->cExtStickX      = m->controller->extStickX;
-    data->cExtStickY      = m->controller->extStickY;
+    data->cExtStickX = m->controller->extStickX;
+    data->cExtStickY = m->controller->extStickY;
 
-    data->input           = m->input;
-    data->flags           = m->flags;
-    data->particleFlags   = m->particleFlags;
-    data->action          = m->action;
-    data->prevAction      = m->prevAction;
-    data->actionState     = m->actionState;
-    data->actionTimer     = m->actionTimer;
-    data->actionArg       = m->actionArg;
-    data->intendedMag     = m->intendedMag;
-    data->intendedYaw     = m->intendedYaw;
-    data->invincTimer     = m->invincTimer;
-    data->framesSinceA    = m->framesSinceA;
-    data->framesSinceB    = m->framesSinceB;
-    data->wallKickTimer   = m->wallKickTimer;
+    data->input = m->input;
+    data->flags = m->flags;
+    data->particleFlags = m->particleFlags;
+    data->action = m->action;
+    data->prevAction = m->prevAction;
+    data->actionState = m->actionState;
+    data->actionTimer = m->actionTimer;
+    data->actionArg = m->actionArg;
+    data->intendedMag = m->intendedMag;
+    data->intendedYaw = m->intendedYaw;
+    data->invincTimer = m->invincTimer;
+    data->framesSinceA = m->framesSinceA;
+    data->framesSinceB = m->framesSinceB;
+    data->wallKickTimer = m->wallKickTimer;
     data->doubleJumpTimer = m->doubleJumpTimer;
     data->specialTripleJump = m->specialTripleJump;
     memcpy(data->faceAngle, m->faceAngle, sizeof(s16) * 3);
-    memcpy(data->angleVel,  m->angleVel,  sizeof(s16) * 3);
-    data->slideYaw        = m->slideYaw;
-    data->twirlYaw        = m->twirlYaw;
+    memcpy(data->angleVel, m->angleVel, sizeof(s16) * 3);
+    data->slideYaw = m->slideYaw;
+    data->twirlYaw = m->twirlYaw;
     memcpy(data->pos, m->pos, sizeof(f32) * 3);
     memcpy(data->vel, m->vel, sizeof(f32) * 3);
-    data->forwardVel      = m->forwardVel;
-    data->slideVelX       = m->slideVelX;
-    data->slideVelZ       = m->slideVelZ;
-    data->health          = m->health;
-    data->squishTimer     = m->squishTimer;
-    data->peakHeight      = m->peakHeight;
-    data->currentRoom     = m->currentRoom;
+    data->forwardVel = m->forwardVel;
+    data->slideVelX = m->slideVelX;
+    data->slideVelZ = m->slideVelZ;
+    data->health = m->health;
+    data->squishTimer = m->squishTimer;
+    data->peakHeight = m->peakHeight;
+    data->currentRoom = m->currentRoom;
     memcpy(data->headRotation, gPlayerCameraState[m->playerIndex].headRotation, sizeof(s16) * 3);
 
-    data->customFlags    = customFlags;
-    data->heldSyncID     = heldSyncID;
-    data->heldBySyncID   = heldBySyncID;
-    data->riddenSyncID   = riddenSyncID;
+    data->customFlags = customFlags;
+    data->heldSyncID = heldSyncID;
+    data->heldBySyncID = heldBySyncID;
+    data->riddenSyncID = riddenSyncID;
     data->interactSyncID = interactSyncID;
-    data->usedSyncID     = usedSyncID;
+    data->usedSyncID = usedSyncID;
     data->platformSyncID = platformSyncID;
 
-    struct NetworkPlayer* np = &gNetworkPlayers[m->playerIndex];
-    data->areaSyncValid  = np->currAreaSyncValid;
+    struct NetworkPlayer *np = &gNetworkPlayers[m->playerIndex];
+    data->areaSyncValid = np->currAreaSyncValid;
     data->levelSyncValid = np->currLevelSyncValid;
 
     data->knockbackTimer = m->knockbackTimer;
@@ -154,66 +154,63 @@ static void read_packet_data(struct PacketPlayerData* data, struct MarioState* m
     data->dialogId = get_dialog_id();
 }
 
-static void write_packet_data(struct PacketPlayerData* data, struct MarioState* m,
-                              u8* customFlags, u32* heldSyncID, u32* heldBySyncID,
-                              u32* riddenSyncID, u32* interactSyncID, u32* usedSyncID,
-                              u32* platformSyncID) {
+static void write_packet_data(struct PacketPlayerData *data, struct MarioState *m, u8 *customFlags, u32 *heldSyncID, u32 *heldBySyncID, u32 *riddenSyncID, u32 *interactSyncID, u32 *usedSyncID, u32 *platformSyncID) {
     memcpy(m->marioObj->rawData.asU32, data->rawData, sizeof(u32) * OBJECT_NUM_REGULAR_FIELDS);
     m->marioObj->header.gfx.node.flags = data->nodeFlags;
 
-    m->controller->rawStickX      = data->cRawStickX;
-    m->controller->rawStickY      = data->cRawStickY;
-    m->controller->stickX         = data->cStickX;
-    m->controller->stickY         = data->cStickY;
-    m->controller->stickMag       = data->cStickMag;
-    m->controller->buttonDown     = data->cButtonDown;
-    m->controller->buttonPressed  = data->cButtonPressed;
+    m->controller->rawStickX = data->cRawStickX;
+    m->controller->rawStickY = data->cRawStickY;
+    m->controller->stickX = data->cStickX;
+    m->controller->stickY = data->cStickY;
+    m->controller->stickMag = data->cStickMag;
+    m->controller->buttonDown = data->cButtonDown;
+    m->controller->buttonPressed = data->cButtonPressed;
     m->controller->buttonReleased = data->cButtonReleased;
-    m->controller->extStickX      = data->cExtStickX;
-    m->controller->extStickY      = data->cExtStickY;
+    m->controller->extStickX = data->cExtStickX;
+    m->controller->extStickY = data->cExtStickY;
 
-    m->input           = data->input;
-    m->flags           = data->flags;
-    m->particleFlags   = data->particleFlags;
-    m->action          = data->action;
-    m->prevAction      = data->prevAction;
-    m->actionState     = data->actionState;
-    m->actionTimer     = data->actionTimer;
-    m->actionArg       = data->actionArg;
-    m->intendedMag     = data->intendedMag;
-    m->intendedYaw     = data->intendedYaw;
-    m->invincTimer     = data->invincTimer;
-    m->framesSinceA    = data->framesSinceA;
-    m->framesSinceB    = data->framesSinceB;
-    m->wallKickTimer   = data->wallKickTimer;
+    m->input = data->input;
+    m->flags = data->flags;
+    m->particleFlags = data->particleFlags;
+    m->action = data->action;
+    m->prevAction = data->prevAction;
+    m->actionState = data->actionState;
+    m->actionTimer = data->actionTimer;
+    m->actionArg = data->actionArg;
+    m->intendedMag = data->intendedMag;
+    m->intendedYaw = data->intendedYaw;
+    m->invincTimer = data->invincTimer;
+    m->framesSinceA = data->framesSinceA;
+    m->framesSinceB = data->framesSinceB;
+    m->wallKickTimer = data->wallKickTimer;
     m->doubleJumpTimer = data->doubleJumpTimer;
     m->specialTripleJump = data->specialTripleJump;
     memcpy(m->faceAngle, data->faceAngle, sizeof(s16) * 3);
-    memcpy(m->angleVel,  data->angleVel,  sizeof(s16) * 3);
-    m->slideYaw        = data->slideYaw;
-    m->twirlYaw        = data->twirlYaw;
+    memcpy(m->angleVel, data->angleVel, sizeof(s16) * 3);
+    m->slideYaw = data->slideYaw;
+    m->twirlYaw = data->twirlYaw;
     memcpy(m->pos, data->pos, sizeof(f32) * 3);
     memcpy(m->vel, data->vel, sizeof(f32) * 3);
-    m->forwardVel      = data->forwardVel;
-    m->slideVelX       = data->slideVelX;
-    m->slideVelZ       = data->slideVelZ;
-    m->health          = data->health;
-    m->squishTimer     = data->squishTimer;
-    m->peakHeight      = data->peakHeight;
-    m->currentRoom     = data->currentRoom;
+    m->forwardVel = data->forwardVel;
+    m->slideVelX = data->slideVelX;
+    m->slideVelZ = data->slideVelZ;
+    m->health = data->health;
+    m->squishTimer = data->squishTimer;
+    m->peakHeight = data->peakHeight;
+    m->currentRoom = data->currentRoom;
     memcpy(gPlayerCameraState[m->playerIndex].headRotation, data->headRotation, sizeof(s16) * 3);
 
-    *customFlags    = data->customFlags;
-    *heldSyncID     = data->heldSyncID;
-    *heldBySyncID   = data->heldBySyncID;
-    *riddenSyncID   = data->riddenSyncID;
+    *customFlags = data->customFlags;
+    *heldSyncID = data->heldSyncID;
+    *heldBySyncID = data->heldBySyncID;
+    *riddenSyncID = data->riddenSyncID;
     *interactSyncID = data->interactSyncID;
-    *usedSyncID     = data->usedSyncID;
+    *usedSyncID = data->usedSyncID;
     *platformSyncID = data->platformSyncID;
 
     if (gNetworkType != NT_SERVER) {
-        struct NetworkPlayer* np = &gNetworkPlayers[m->playerIndex];
-        np->currAreaSyncValid  = data->areaSyncValid;
+        struct NetworkPlayer *np = &gNetworkPlayers[m->playerIndex];
+        np->currAreaSyncValid = data->areaSyncValid;
         np->currLevelSyncValid = data->levelSyncValid;
     }
 
@@ -223,33 +220,45 @@ static void write_packet_data(struct PacketPlayerData* data, struct MarioState* 
 }
 
 void network_send_player(u8 localIndex) {
-    if (gMarioStates[localIndex].marioObj == NULL) { return; }
-    if (gDjuiInMainMenu) { return; }
-    if (gNetworkPlayerLocal == NULL || !gNetworkPlayerLocal->currAreaSyncValid) { return; }
+    if (gMarioStates[localIndex].marioObj == NULL) {
+        return;
+    }
+    if (gDjuiInMainMenu) {
+        return;
+    }
+    if (gNetworkPlayerLocal == NULL || !gNetworkPlayerLocal->currAreaSyncValid) {
+        return;
+    }
 
-    struct PacketPlayerData data = { 0 };
+    struct PacketPlayerData data = {0};
     read_packet_data(&data, &gMarioStates[localIndex]);
 
-    struct Packet p = { 0 };
+    struct Packet p = {0};
     packet_init(&p, PACKET_PLAYER, false, PLMT_AREA);
     packet_write(&p, &gNetworkPlayers[localIndex].globalIndex, sizeof(u8));
     packet_write(&p, &data, sizeof(struct PacketPlayerData));
     network_send(&p);
 }
 
-void network_receive_player(struct Packet* p) {
+void network_receive_player(struct Packet *p) {
     u8 globalIndex = 0;
     packet_read(p, &globalIndex, sizeof(u8));
-    struct NetworkPlayer* np = network_player_from_global_index(globalIndex);
-    if (np == NULL || np->localIndex == UNKNOWN_LOCAL_INDEX || !np->connected) { return; }
+    struct NetworkPlayer *np = network_player_from_global_index(globalIndex);
+    if (np == NULL || np->localIndex == UNKNOWN_LOCAL_INDEX || !np->connected) {
+        return;
+    }
 
     // prevent receiving a packet about our player
-    if (gNetworkPlayerLocal && globalIndex == gNetworkPlayerLocal->globalIndex) { return; }
+    if (gNetworkPlayerLocal && globalIndex == gNetworkPlayerLocal->globalIndex) {
+        return;
+    }
 
-    struct MarioState* m = &gMarioStates[np->localIndex];
-    if (m == NULL || m->marioObj == NULL) { return; }
+    struct MarioState *m = &gMarioStates[np->localIndex];
+    if (m == NULL || m->marioObj == NULL) {
+        return;
+    }
 
-    if (gNetworkType == NT_SERVER && *((u32*)(p->buffer + p->cursor + offsetof(struct PacketPlayerData, action))) == ACT_DEBUG_FREE_MOVE) {
+    if (gNetworkType == NT_SERVER && *((u32 *) (p->buffer + p->cursor + offsetof(struct PacketPlayerData, action))) == ACT_DEBUG_FREE_MOVE) {
 #ifdef DEVELOPMENT
         if (m->action != ACT_DEBUG_FREE_MOVE) {
             construct_player_popup(np, DLANG(NOTIF, DEBUG_FLY), NULL);
@@ -262,21 +271,20 @@ void network_receive_player(struct Packet* p) {
     }
 
     // prevent receiving player from other area
-    bool levelAreaMismatch = ((gNetworkPlayerLocal == NULL)
-        || np->currCourseNum != gNetworkPlayerLocal->currCourseNum
-        || np->currActNum    != gNetworkPlayerLocal->currActNum
-        || np->currLevelNum  != gNetworkPlayerLocal->currLevelNum
-        || np->currAreaIndex != gNetworkPlayerLocal->currAreaIndex);
-    if (levelAreaMismatch) { np->currPositionValid = false; return; }
+    bool levelAreaMismatch = ((gNetworkPlayerLocal == NULL) || np->currCourseNum != gNetworkPlayerLocal->currCourseNum || np->currActNum != gNetworkPlayerLocal->currActNum || np->currLevelNum != gNetworkPlayerLocal->currLevelNum || np->currAreaIndex != gNetworkPlayerLocal->currAreaIndex);
+    if (levelAreaMismatch) {
+        np->currPositionValid = false;
+        return;
+    }
 
     // save previous state
-    struct PacketPlayerData oldData = { 0 };
+    struct PacketPlayerData oldData = {0};
     read_packet_data(&oldData, m);
-    u16 playerIndex  = np->localIndex;
+    u16 playerIndex = np->localIndex;
     u32 oldBehParams = m->marioObj->oBehParams;
 
     // load mario information from packet
-    struct PacketPlayerData data = { 0 };
+    struct PacketPlayerData data = {0};
     packet_read(p, &data, sizeof(struct PacketPlayerData));
 
     // check to see if we should just drop this packet
@@ -285,17 +293,14 @@ void network_receive_player(struct Packet* p) {
     }
 
     // apply data from packet to mario state
-    u32 heldSyncID     = 0;
-    u32 heldBySyncID   = 0;
-    u32 riddenSyncID   = 0;
+    u32 heldSyncID = 0;
+    u32 heldBySyncID = 0;
+    u32 riddenSyncID = 0;
     u32 interactSyncID = 0;
-    u32 usedSyncID     = 0;
+    u32 usedSyncID = 0;
     u32 platformSyncID = 0;
-    u8  customFlags    = 0;
-    write_packet_data(&data, m, &customFlags,
-                      &heldSyncID, &heldBySyncID,
-                      &riddenSyncID, &interactSyncID,
-                      &usedSyncID, &platformSyncID);
+    u8 customFlags = 0;
+    write_packet_data(&data, m, &customFlags, &heldSyncID, &heldBySyncID, &riddenSyncID, &interactSyncID, &usedSyncID, &platformSyncID);
 
     // read custom flags
     m->freeze = GET_BIT(customFlags, 0);
@@ -310,7 +315,7 @@ void network_receive_player(struct Packet* p) {
     }
 
     // find and set their held object
-    struct SyncObject* heldSo = sync_object_get(heldSyncID);
+    struct SyncObject *heldSo = sync_object_get(heldSyncID);
     m->heldObj = heldSo ? heldSo->o : NULL;
     if (m->heldObj != NULL) {
         if (gMarioStates[0].heldObj == m->heldObj && np->globalIndex < gNetworkPlayerLocal->globalIndex) {
@@ -323,7 +328,7 @@ void network_receive_player(struct Packet* p) {
     }
 
     // find and set their held-by object
-    struct SyncObject* heldBySo = sync_object_get(heldBySyncID);
+    struct SyncObject *heldBySo = sync_object_get(heldBySyncID);
     if (heldBySo && heldBySo->o) {
         // TODO: do we have to move graphics nodes around to make this visible?
         m->heldByObj = heldBySo->o;
@@ -332,7 +337,7 @@ void network_receive_player(struct Packet* p) {
     }
 
     // find and set their ridden object
-    struct SyncObject* riddenSo = sync_object_get(riddenSyncID);
+    struct SyncObject *riddenSo = sync_object_get(riddenSyncID);
     if (riddenSo && riddenSo->o) {
         riddenSo->o->heldByPlayerIndex = np->localIndex;
         m->riddenObj = riddenSo->o;
@@ -341,19 +346,19 @@ void network_receive_player(struct Packet* p) {
     }
 
     // find and set their interact object
-    struct SyncObject* interactSo = sync_object_get(interactSyncID);
+    struct SyncObject *interactSo = sync_object_get(interactSyncID);
     if (interactSo && interactSo->o) {
         m->interactObj = interactSo->o;
     }
 
     // find and set their used object
-    struct SyncObject* usedSo = sync_object_get(usedSyncID);
+    struct SyncObject *usedSo = sync_object_get(usedSyncID);
     if (usedSo && usedSo->o != NULL) {
         m->usedObj = usedSo->o;
     }
 
     // place on top of platform
-    struct SyncObject* platformSo = sync_object_get(platformSyncID);
+    struct SyncObject *platformSo = sync_object_get(platformSyncID);
     if (platformSo && platformSo->o) {
 
         // search up to 500 units for the platform
@@ -424,11 +429,15 @@ void network_receive_player(struct Packet* p) {
 }
 
 void network_update_player(void) {
-    if (!network_player_any_connected()) { return; }
-    struct MarioState* m = &gMarioStates[0];
+    if (!network_player_any_connected()) {
+        return;
+    }
+    struct MarioState *m = &gMarioStates[0];
 
     u8 localIsHeadless = (&gNetworkPlayers[0] == gNetworkPlayerServer && gServerSettings.headlessServer);
-    if (localIsHeadless) { return; }
+    if (localIsHeadless) {
+        return;
+    }
 
     // figure out if we should send it or not
     static u8 sTicksSinceSend = 0;
@@ -441,23 +450,20 @@ void network_update_player(void) {
     static u32 sLastButtonReleased = 0;
 
     f32 stickDist = sqrtf(powf(sLastStickX - m->controller->stickX, 2) + powf(sLastStickY - m->controller->stickY, 2));
-    bool shouldSend = (sTicksSinceSend > 2)
-        || (sLastPlayerAction    != m->action)
-        || (sLastButtonDown      != m->controller->buttonDown)
-        || (sLastButtonPressed   != m->controller->buttonPressed)
-        || (sLastButtonReleased  != m->controller->buttonReleased)
-        || (sLastPlayerParticles != m->particleFlags)
-        || (stickDist          > 5.0f);
+    bool shouldSend = (sTicksSinceSend > 2) || (sLastPlayerAction != m->action) || (sLastButtonDown != m->controller->buttonDown) || (sLastButtonPressed != m->controller->buttonPressed) || (sLastButtonReleased != m->controller->buttonReleased) || (sLastPlayerParticles != m->particleFlags) || (stickDist > 5.0f);
 
-    if (!shouldSend) { sTicksSinceSend++; return; }
+    if (!shouldSend) {
+        sTicksSinceSend++;
+        return;
+    }
     network_send_player(0);
     sTicksSinceSend = 0;
 
-    sLastPlayerAction    = m->action;
-    sLastStickX          = m->controller->stickX;
-    sLastStickY          = m->controller->stickY;
-    sLastButtonDown      = m->controller->buttonDown;
-    sLastButtonPressed   = m->controller->buttonPressed;
-    sLastButtonReleased  = m->controller->buttonReleased;
+    sLastPlayerAction = m->action;
+    sLastStickX = m->controller->stickX;
+    sLastStickY = m->controller->stickY;
+    sLastButtonDown = m->controller->buttonDown;
+    sLastButtonPressed = m->controller->buttonPressed;
+    sLastButtonReleased = m->controller->buttonReleased;
     sLastPlayerParticles = m->particleFlags;
 }

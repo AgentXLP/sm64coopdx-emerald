@@ -5,7 +5,7 @@
 #include "pc/djui/djui.h"
 
 static SOCKET sCurSocket = INVALID_SOCKET;
-static struct sockaddr_in6 sAddr[MAX_PLAYERS] = { 0 };
+static struct sockaddr_in6 sAddr[MAX_PLAYERS] = {0};
 struct addrinfo hints;
 struct addrinfo *result, *i;
 
@@ -26,10 +26,12 @@ void resolve_domain(struct sockaddr_in6 *addr) {
     if (configJoinIp[0] == '[') {
         LOG_INFO("sanity check: found opening square bracket on configJoinIp, removing it.");
         for (int i = 0; i < MAX_CONFIG_STRING; i++) {
-            if (configJoinIp[i] == '\0') { break; }
+            if (configJoinIp[i] == '\0') {
+                break;
+            }
             if (configJoinIp[i] == ']') {
                 configJoinIp[i] = '\0';
-                memcpy(&configJoinIp, &configJoinIp[1], MAX_CONFIG_STRING-1);
+                memcpy(&configJoinIp, &configJoinIp[1], MAX_CONFIG_STRING - 1);
                 break;
             }
         }
@@ -46,7 +48,7 @@ void resolve_domain(struct sockaddr_in6 *addr) {
             char str[INET6_ADDRSTRLEN];
             // IPv6 address:
             if (i->ai_addr->sa_family == AF_INET6) {
-                struct sockaddr_in6 *p = (struct sockaddr_in6 *)i->ai_addr;
+                struct sockaddr_in6 *p = (struct sockaddr_in6 *) i->ai_addr;
                 // copy address to sockaddr_in6 struct
                 memcpy(&addr->sin6_addr, &p->sin6_addr, sizeof(struct in6_addr));
                 // set new join IP for config file
@@ -56,7 +58,7 @@ void resolve_domain(struct sockaddr_in6 *addr) {
                 return;
 
             } else if (i->ai_addr->sa_family == AF_INET) { // IPv4 address. Convert it to an IPv6-mapped IPv4 address so it's compatible with the IPv6 socket.
-                struct sockaddr_in *p = (struct sockaddr_in *)i->ai_addr;
+                struct sockaddr_in *p = (struct sockaddr_in *) i->ai_addr;
                 struct in6_addr ipv6_mapped_addr;
                 // clear out IPv6-mapped IPv4 address buffer
                 memset(&ipv6_mapped_addr, 0, sizeof(struct in6_addr));
@@ -88,7 +90,7 @@ static int socket_bind(SOCKET socket, unsigned int port) {
     rxAddr.sin6_port = htons(port);
     rxAddr.sin6_addr = in6addr_any;
 
-    int rc = bind(socket, (SOCKADDR *)&rxAddr, sizeof(rxAddr));
+    int rc = bind(socket, (SOCKADDR *) &rxAddr, sizeof(rxAddr));
 
     if (rc != 0) {
         LOG_ERROR("bind failed with error %d", SOCKET_LAST_ERROR);
@@ -97,23 +99,27 @@ static int socket_bind(SOCKET socket, unsigned int port) {
     return rc;
 }
 
-static int socket_send(SOCKET socket, struct sockaddr_in6* addr, u8* buffer, u16 bufferLength) {
+static int socket_send(SOCKET socket, struct sockaddr_in6 *addr, u8 *buffer, u16 bufferLength) {
     int addrSize = sizeof(struct sockaddr_in6);
-    int rc = sendto(socket, (char*)buffer, bufferLength, 0, (struct sockaddr*)addr, addrSize);
-    if (rc != SOCKET_ERROR) { return NO_ERROR; }
+    int rc = sendto(socket, (char *) buffer, bufferLength, 0, (struct sockaddr *) addr, addrSize);
+    if (rc != SOCKET_ERROR) {
+        return NO_ERROR;
+    }
 
     int error = SOCKET_LAST_ERROR;
-    if (error == SOCKET_EWOULDBLOCK) { return NO_ERROR; }
+    if (error == SOCKET_EWOULDBLOCK) {
+        return NO_ERROR;
+    }
 
     LOG_ERROR("sendto failed with error: %d", error);
     return rc;
 }
 
-static int socket_receive(SOCKET socket, struct sockaddr_in6* rxAddr, u8* buffer, u16 bufferLength, u16* receiveLength, u8* localIndex) {
+static int socket_receive(SOCKET socket, struct sockaddr_in6 *rxAddr, u8 *buffer, u16 bufferLength, u16 *receiveLength, u8 *localIndex) {
     *receiveLength = 0;
 
     RX_ADDR_SIZE_TYPE rxAddrSize = sizeof(struct sockaddr_in6);
-    int rc = recvfrom(socket, (char*)buffer, bufferLength, 0, (struct sockaddr*)rxAddr, &rxAddrSize);
+    int rc = recvfrom(socket, (char *) buffer, bufferLength, 0, (struct sockaddr *) rxAddr, &rxAddrSize);
 
     for (int i = 1; i < MAX_PLAYERS; i++) {
         if (memcmp(rxAddr, &sAddr[i], sizeof(struct sockaddr_in6)) == 0) {
@@ -137,21 +143,25 @@ static int socket_receive(SOCKET socket, struct sockaddr_in6* rxAddr, u8* buffer
 static bool ns_socket_initialize(enum NetworkType networkType, UNUSED bool reconnecting) {
     // sanity check port
     unsigned int port = (networkType == NT_CLIENT) ? configJoinPort : configHostPort;
-    if (port == 0) { port = DEFAULT_PORT; }
+    if (port == 0) {
+        port = DEFAULT_PORT;
+    }
 
     // create a receiver socket to receive datagrams
     sCurSocket = socket_initialize();
-    if (sCurSocket == INVALID_SOCKET) { return false; }
+    if (sCurSocket == INVALID_SOCKET) {
+        return false;
+    }
 
     // connect
     if (networkType == NT_SERVER) {
         int reuse = 1;
-        if (setsockopt(sCurSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse)) < 0) {
+        if (setsockopt(sCurSocket, SOL_SOCKET, SO_REUSEADDR, (const char *) &reuse, sizeof(reuse)) < 0) {
             LOG_ERROR("setsockopt(SO_REUSEADDR) failed");
         }
 
 #ifdef SO_REUSEPORT
-        if (setsockopt(sCurSocket, SOL_SOCKET, SO_REUSEPORT, (const char*)&reuse, sizeof(reuse)) < 0) {
+        if (setsockopt(sCurSocket, SOL_SOCKET, SO_REUSEPORT, (const char *) &reuse, sizeof(reuse)) < 0) {
             LOG_ERROR("setsockopt(SO_REUSEPORT) failed");
         }
 #endif
@@ -177,7 +187,7 @@ static bool ns_socket_initialize(enum NetworkType networkType, UNUSED bool recon
         snprintf(configJoinIp, MAX_CONFIG_STRING, "%s", gGetHostName);
 
         // kick off first packet
-        char joinText[128] = { 0 };
+        char joinText[128] = {0};
         snprintf(joinText, 63, "%s %d", configJoinIp, configJoinPort);
         djui_connect_menu_open();
 
@@ -198,9 +208,11 @@ static s64 ns_socket_get_id(UNUSED u8 localId) {
     return 0;
 }
 
-static char* ns_socket_get_id_str(u8 localId) {
-    if (localId == UNKNOWN_LOCAL_INDEX) { localId = 0; }
-    static char id_str[INET6_ADDRSTRLEN] = { 0 };
+static char *ns_socket_get_id_str(u8 localId) {
+    if (localId == UNKNOWN_LOCAL_INDEX) {
+        localId = 0;
+    }
+    static char id_str[INET6_ADDRSTRLEN] = {0};
     inet_ntop(AF_INET6, &sAddr[localId].sin6_addr, id_str, sizeof(id_str));
     return id_str;
 }
@@ -213,24 +225,28 @@ static void ns_socket_save_id(u8 localId, UNUSED s64 networkId) {
 }
 
 static void ns_socket_clear_id(u8 localId) {
-    if (localId == 0) { return; }
+    if (localId == 0) {
+        return;
+    }
     SOFT_ASSERT(localId < MAX_PLAYERS);
     memset(&sAddr[localId], 0, sizeof(struct sockaddr_in6));
     LOG_INFO("cleared addr for id %d", localId);
 }
 
-static void* ns_socket_dup_addr(u8 localIndex) {
-    void* address = malloc(sizeof(struct sockaddr_in6));
+static void *ns_socket_dup_addr(u8 localIndex) {
+    void *address = malloc(sizeof(struct sockaddr_in6));
     memcpy(address, &sAddr[localIndex], sizeof(struct sockaddr_in6));
     return address;
 }
 
-static bool ns_socket_match_addr(void* addr1, void* addr2) {
+static bool ns_socket_match_addr(void *addr1, void *addr2) {
     return !memcmp(addr1, addr2, sizeof(struct sockaddr_in6));
 }
 
 static void ns_socket_update(void) {
-    if (gNetworkType == NT_NONE) { return; }
+    if (gNetworkType == NT_NONE) {
+        return;
+    }
     do {
         // receive packet
         u8 data[PACKET_LENGTH + 1];
@@ -238,19 +254,27 @@ static void ns_socket_update(void) {
         u8 localIndex = UNKNOWN_LOCAL_INDEX;
         int rc = socket_receive(sCurSocket, &sAddr[0], data, PACKET_LENGTH + 1, &dataLength, &localIndex);
         SOFT_ASSERT(dataLength < PACKET_LENGTH);
-        if (rc != NO_ERROR) { break; }
+        if (rc != NO_ERROR) {
+            break;
+        }
         network_receive(localIndex, &sAddr[0], data, dataLength);
     } while (true);
 }
 
-static int ns_socket_send(u8 localIndex, void* address, u8* data, u16 dataLength) {
+static int ns_socket_send(u8 localIndex, void *address, u8 *data, u16 dataLength) {
     if (localIndex != 0) {
-        if (gNetworkType == NT_SERVER && gNetworkPlayers[localIndex].type != NPT_CLIENT) { return SOCKET_ERROR; }
-        if (gNetworkType == NT_CLIENT && gNetworkPlayers[localIndex].type != NPT_SERVER) { return SOCKET_ERROR; }
+        if (gNetworkType == NT_SERVER && gNetworkPlayers[localIndex].type != NPT_CLIENT) {
+            return SOCKET_ERROR;
+        }
+        if (gNetworkType == NT_CLIENT && gNetworkPlayers[localIndex].type != NPT_SERVER) {
+            return SOCKET_ERROR;
+        }
     }
 
-    struct sockaddr_in6* userAddr = &sAddr[localIndex];
-    if (localIndex == 0 && address != NULL) { userAddr = (struct sockaddr_in6*)address; }
+    struct sockaddr_in6 *userAddr = &sAddr[localIndex];
+    if (localIndex == 0 && address != NULL) {
+        userAddr = (struct sockaddr_in6 *) address;
+    }
 
     int rc = socket_send(sCurSocket, userAddr, data, dataLength);
     if (rc) {
@@ -259,11 +283,11 @@ static int ns_socket_send(u8 localIndex, void* address, u8* data, u16 dataLength
     return rc;
 }
 
-static void ns_socket_get_lobby_id(char* destination, u32 destLength) {
+static void ns_socket_get_lobby_id(char *destination, u32 destLength) {
     snprintf(destination, destLength, "%s", ""); // TODO: we can probably hook this up
 }
 
-static void ns_socket_get_lobby_secret(char* destination, u32 destLength) {
+static void ns_socket_get_lobby_secret(char *destination, u32 destLength) {
     snprintf(destination, destLength, "%s", ""); // TODO: we can probably hook this up
 }
 
@@ -277,18 +301,18 @@ static void ns_socket_shutdown(UNUSED bool reconnecting) {
 }
 
 struct NetworkSystem gNetworkSystemSocket = {
-    .initialize       = ns_socket_initialize,
-    .get_id           = ns_socket_get_id,
-    .get_id_str       = ns_socket_get_id_str,
-    .save_id          = ns_socket_save_id,
-    .clear_id         = ns_socket_clear_id,
-    .dup_addr         = ns_socket_dup_addr,
-    .match_addr       = ns_socket_match_addr,
-    .update           = ns_socket_update,
-    .send             = ns_socket_send,
-    .get_lobby_id     = ns_socket_get_lobby_id,
+    .initialize = ns_socket_initialize,
+    .get_id = ns_socket_get_id,
+    .get_id_str = ns_socket_get_id_str,
+    .save_id = ns_socket_save_id,
+    .clear_id = ns_socket_clear_id,
+    .dup_addr = ns_socket_dup_addr,
+    .match_addr = ns_socket_match_addr,
+    .update = ns_socket_update,
+    .send = ns_socket_send,
+    .get_lobby_id = ns_socket_get_lobby_id,
     .get_lobby_secret = ns_socket_get_lobby_secret,
-    .shutdown         = ns_socket_shutdown,
+    .shutdown = ns_socket_shutdown,
     .requireServerBroadcast = true,
-    .name             = "Socket",
+    .name = "Socket",
 };

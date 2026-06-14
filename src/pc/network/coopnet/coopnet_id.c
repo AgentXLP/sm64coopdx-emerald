@@ -4,17 +4,17 @@
 #include "pc/debuglog.h"
 
 static uint64_t sLocalUserId = 0;
-static uint64_t sNetworkUserIds[MAX_PLAYERS] = { 0 };
+static uint64_t sNetworkUserIds[MAX_PLAYERS] = {0};
 
 #define MAX_DEST_IDS (MAX_PLAYERS * 2)
 struct DestinationId {
     uint64_t userId;
     uint64_t destId;
 };
-struct DestinationId sDestinationIds[MAX_DEST_IDS] = { 0 };
+struct DestinationId sDestinationIds[MAX_DEST_IDS] = {0};
 
 void coopnet_save_dest_id(uint64_t userId, uint64_t destId) {
-    struct DestinationId* dest = NULL;
+    struct DestinationId *dest = NULL;
     for (int i = 0; i < MAX_DEST_IDS; i++) {
         if (sDestinationIds[i].userId == userId) {
             sDestinationIds[i].destId = destId;
@@ -76,28 +76,32 @@ void coopnet_set_local_user_id(uint64_t userId) {
 }
 
 s64 coopnet_raw_get_id(u8 localIndex) {
-    return (s64)sNetworkUserIds[localIndex];
+    return (s64) sNetworkUserIds[localIndex];
 }
 
 s64 ns_coopnet_get_id(u8 localIndex) {
-    if (localIndex == 0) { return (s64)sLocalUserId; }
-    return (s64)sNetworkUserIds[localIndex];
+    if (localIndex == 0) {
+        return (s64) sLocalUserId;
+    }
+    return (s64) sNetworkUserIds[localIndex];
 }
 
 void ns_coopnet_save_id(u8 localIndex, s64 networkId) {
     SOFT_ASSERT(localIndex > 0);
     SOFT_ASSERT(localIndex < MAX_PLAYERS);
-    sNetworkUserIds[localIndex] = (networkId == 0) ? sNetworkUserIds[0] : (u64)networkId;
+    sNetworkUserIds[localIndex] = (networkId == 0) ? sNetworkUserIds[0] : (u64) networkId;
 }
 
 void ns_coopnet_clear_id(u8 localIndex) {
-    if (localIndex == 0) { return; }
+    if (localIndex == 0) {
+        return;
+    }
     SOFT_ASSERT(localIndex < MAX_PLAYERS);
     sNetworkUserIds[localIndex] = 0;
 }
 
-void* ns_coopnet_dup_addr(u8 localIndex) {
-    void* address = malloc(sizeof(u64));
+void *ns_coopnet_dup_addr(u8 localIndex) {
+    void *address = malloc(sizeof(u64));
     memcpy(address, &sNetworkUserIds[localIndex], sizeof(u64));
     return address;
 }

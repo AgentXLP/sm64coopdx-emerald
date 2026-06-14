@@ -29,7 +29,7 @@ SOCKET socket_initialize(void) {
 
     // set dual-stack socket mode
     int v6only = 0;
-    if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&v6only, sizeof(v6only)) < 0) {
+    if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (void *) &v6only, sizeof(v6only)) < 0) {
         LOG_ERROR("setsockopt(IPV6_V6ONLY) failed.");
         return INVALID_SOCKET;
     };
@@ -39,7 +39,7 @@ SOCKET socket_initialize(void) {
     // for the many players case to avoid WSAEWOULDBLOCK on send
     // not actually sure this is the "proper" way to fix it
     int bufsiz = 128 * 1024; // 128kb, default is apparently 8kb or 16kb
-    rc = setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (const char *)&bufsiz, sizeof(bufsiz));
+    rc = setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (const char *) &bufsiz, sizeof(bufsiz));
     if (rc != NO_ERROR) {
         LOG_ERROR("setsockopt(SO_SNDBUF) failed with error: %d", rc);
     }
@@ -49,7 +49,9 @@ SOCKET socket_initialize(void) {
 }
 
 void socket_shutdown(SOCKET socket) {
-    if (socket == INVALID_SOCKET) { return; }
+    if (socket == INVALID_SOCKET) {
+        return;
+    }
     int rc = closesocket(socket);
     if (rc == SOCKET_ERROR) {
         LOG_ERROR("closesocket failed with error %d", SOCKET_LAST_ERROR);

@@ -12,21 +12,21 @@
 
 extern ALIGNED8 u8 texture_coopdx_logo[];
 
-struct LoadingSegment gCurrLoadingSegment = { "", 0 };
+struct LoadingSegment gCurrLoadingSegment = {"", 0};
 
 struct LoadingScreen {
     struct DjuiBase base;
-    struct DjuiImage* splashImage;
-    struct DjuiText* splashText;
-    struct DjuiText* loadingDesc;
+    struct DjuiImage *splashImage;
+    struct DjuiText *splashText;
+    struct DjuiText *loadingDesc;
     struct DjuiProgressBar *loadingBar;
 };
 
-static struct LoadingScreen* sLoading = NULL;
+static struct LoadingScreen *sLoading = NULL;
 
-struct ThreadHandle gLoadingThread = { 0 };
+struct ThreadHandle gLoadingThread = {0};
 
-void loading_screen_set_segment_text(const char* text) {
+void loading_screen_set_segment_text(const char *text) {
     snprintf(gCurrLoadingSegment.str, 256, "%s", text);
 }
 
@@ -35,14 +35,16 @@ void loading_screen_reset_progress_bar(void) {
 }
 
 static void loading_screen_produce_frame_callback(void) {
-    if (sLoading) { djui_base_render(&sLoading->base); }
+    if (sLoading) {
+        djui_base_render(&sLoading->base);
+    }
 }
 
 static void loading_screen_produce_one_frame(void) {
     produce_one_dummy_frame(loading_screen_produce_frame_callback, 0x00, 0x00, 0x00);
 }
 
-static bool loading_screen_on_render(struct DjuiBase* base) {
+static bool loading_screen_on_render(struct DjuiBase *base) {
     MUTEX_LOCK(gLoadingThread);
 
     u32 windowWidth, windowHeight;
@@ -70,7 +72,7 @@ static bool loading_screen_on_render(struct DjuiBase* base) {
         u32 length = strlen(gCurrLoadingSegment.str);
         if (length > 0) {
             if (gCurrLoadingSegment.percentage > 0) {
-                snprintf(buffer, 256, "%s\n\\#dcdcdc\\%d%%", gCurrLoadingSegment.str, (u8)floor(gCurrLoadingSegment.percentage * 100));
+                snprintf(buffer, 256, "%s\n\\#dcdcdc\\%d%%", gCurrLoadingSegment.str, (u8) floor(gCurrLoadingSegment.percentage * 100));
             } else {
                 snprintf(buffer, 256, "%s...", gCurrLoadingSegment.str);
             }
@@ -92,21 +94,21 @@ static bool loading_screen_on_render(struct DjuiBase* base) {
     return true;
 }
 
-static void loading_screen_destroy(struct DjuiBase* base) {
-    struct LoadingScreen* load = (struct LoadingScreen*)base;
+static void loading_screen_destroy(struct DjuiBase *base) {
+    struct LoadingScreen *load = (struct LoadingScreen *) base;
     free(load);
     sLoading = NULL;
 }
 
 static void init_loading_screen(void) {
-    struct LoadingScreen* load = calloc(1, sizeof(struct LoadingScreen));
-    struct DjuiBase* base = &load->base;
+    struct LoadingScreen *load = calloc(1, sizeof(struct LoadingScreen));
+    struct DjuiBase *base = &load->base;
 
     djui_base_init(NULL, base, loading_screen_on_render, loading_screen_destroy);
 
     // splash text (easter egg)
     if (configExCoopTheme) {
-        struct DjuiText* splashDjuiText = djui_text_create(base, "\\#ff0800\\SM\\#1be700\\64\\#00b3ff\\EX\n\\#ffef00\\COOP");
+        struct DjuiText *splashDjuiText = djui_text_create(base, "\\#ff0800\\SM\\#1be700\\64\\#00b3ff\\EX\n\\#ffef00\\COOP");
         djui_base_set_location_type(&splashDjuiText->base, DJUI_SVT_RELATIVE, DJUI_SVT_ABSOLUTE);
         djui_base_set_location(&splashDjuiText->base, 0, 0);
         djui_text_set_font(splashDjuiText, gDjuiFonts[1]);
@@ -117,9 +119,9 @@ static void init_loading_screen(void) {
 
         load->splashText = splashDjuiText;
 
-    // splash image
+        // splash image
     } else {
-        struct DjuiImage* splashImage = djui_image_create(base, texture_coopdx_logo, 2048, 1024, G_IM_FMT_RGBA, G_IM_SIZ_32b);
+        struct DjuiImage *splashImage = djui_image_create(base, texture_coopdx_logo, 2048, 1024, G_IM_FMT_RGBA, G_IM_SIZ_32b);
         djui_base_set_location_type(&splashImage->base, DJUI_SVT_RELATIVE, DJUI_SVT_ABSOLUTE);
         djui_base_set_alignment(&splashImage->base, DJUI_HALIGN_CENTER, DJUI_VALIGN_TOP);
         djui_base_set_location(&splashImage->base, 0, -100);
@@ -173,7 +175,9 @@ void loading_screen_reset(void) {
 }
 
 void render_loading_screen(void) {
-    if (!sLoading) { init_loading_screen(); }
+    if (!sLoading) {
+        init_loading_screen();
+    }
 
     // loading screen loop
     while (!gGameInited) {
@@ -185,7 +189,9 @@ void render_loading_screen(void) {
 }
 
 void render_rom_setup_screen(void) {
-    if (!sLoading) { init_loading_screen(); }
+    if (!sLoading) {
+        init_loading_screen();
+    }
 
     loading_screen_set_segment_text("No rom detected, drag & drop Super Mario 64 (U) [!].z64 on to this screen");
 
